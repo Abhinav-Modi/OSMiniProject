@@ -6,11 +6,9 @@
   <meta charset='utf-8'>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
   <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-  <meta name="description"
-    content="Visualiser for 9 Scheduling Algorithms, like FCFS, SJF(Preemptive/non Preemptive), RR, LJF(Preemptive/non Preemptive), Priority(Preemptive/non Preemptive) and a new algorithm combination of SJF,RR and priority">
   <meta name="keywords" content="cpu, scheduling, algorithm, Visualiser">
   <meta name="author" content="mukul2310">
-  <title>SchAlgo:CPU Scheduling Algorithm Visualiser</title>
+  <title>OS Mini Project</title>
   <link rel="icon" type="image/png" href="images/image3.png">
   <link rel="stylesheet" href="css/style.css">
   <script defer src="js/main.js"></script>
@@ -21,30 +19,29 @@
     integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous">
   </script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script type='text/javascript'>
-    window.smartlook || (function (d) {
-      var o = smartlook = function () {
-          o.api.push(arguments)
-        },
-        h = d.getElementsByTagName('head')[0];
-      var c = d.createElement('script');
-      o.api = new Array();
-      c.async = true;
-      c.type = 'text/javascript';
-      c.charset = 'utf-8';
-      c.src = 'https://web-sdk.smartlook.com/recorder.js';
-      h.appendChild(c);
-    })(document);
-    smartlook('init', '543a4c552cae935cc85f240d4ef91825f66675b4', {
-      region: 'eu'
-    });
-  </script>
+
 </head>
 
 <body>
 
 
-  <h1 class="display-4 text-center fw-bold">CPU Scheduling Visualizer</h1>
+  <h1 class="display-4 text-center fw-bold">CPU Scheduler</h1>
+  <h2>OS Mini-Project</h2>
+  <div class="names">
+    <div class="name">
+      <h5 class="text-start fw-bold">Ayush Batra</h5>
+      <h6>200905280, Roll- 41</h6>
+
+    </div>
+      <div class="name">
+      <h5 class="text-start fw-bold">Abhinav Modi</h5>
+      <h6>200905280, Roll- 49</h6>
+    </div>
+      <div class="name nob">
+      <h5 class="text-start fw-bold">Ranjan Bhat</h5>
+      <h6>200905280,  Roll- 51</h6>
+    </div>
+  </div>
   <div class="container-fluid">
     <div class="col-sm-12">
       <div class="card border-0">
@@ -164,48 +161,6 @@
   </div>
   </div>
 
-  <!-- Visualization part -->
-  <div class="container-fluid" id="vis" hidden>
-    <div>
-      <div>
-        <h4>Algorithm: <span id="vis_name"></span></h4>
-      </div>
-      <div>
-        <h4>Ready Queue</h4>
-        <div class="flexible">
-          <div class="readyqueue"></div>
-          <div class="d-flex" id="vis_rq">
-            P1
-          </div>
-        </div>
-      </div>
-      <div id="wq" hidden>
-        <h4>Waiting Queue</h4>
-        <div class="" id="vis_wq">
-          P4
-        </div>
-      </div>
-      <div class="d-flex">
-        <h4>CPU</h4>
-        <div class="cpu" id="vis_cpu">
-          P1
-        </div>
-        <div class="p-0 m-auto display-6">
-          <h4>Time: <span id="vis_time" class="bg-warning"></span></h4>
-          <a class="btn btn-outline-danger" href="javascript:void(0)" id="vis_stop">STOP!</a>
-          <!-- <a class="btn btn-outline-success" href="javascript:void(0)" id="vis_resume">Resume</a> -->
-        </div>
-      </div>
-      <!-- <div>
-          <h4>Completed Process</h4>
-          <div class="flexible">
-          <div class="completedqueue"></div>
-          <div class="d-flex" id="vis_cp">
-            P1
-          </div>
-        </div> -->
-    </div>
-  </div>
   </div>
 
   <!-- Gantt Chart -->

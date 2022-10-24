@@ -49,148 +49,12 @@ function calculateBurstTimePriority() {
 	}
 }
 
-//formula2
-function calculateF() {
-	for (p in readyQueue) {
-		readyQueue[p].f =
-			(1.0 * (3 * readyQueue[p].priority + readyQueue[p].burstTimePriority)) /
-			4;
-	}
-}
-
-function calculateFRank() {
-	let duplicate = [];
-	let flag = [];
-	for (p in readyQueue) {
-		duplicate[p] = readyQueue[p].f;
-		flag[p] = false;
-	}
-
-	duplicate.sort(function (a, b) {
-		return a - b;
-	});
-
-	for (p in readyQueue) {
-		for (d in duplicate) {
-			if (readyQueue[p].f === duplicate[d] && !flag[d]) {
-				readyQueue[p].fRank = Number(d) + 1;
-				flag[d] = true;
-				break;
-			}
-		}
-	}
-}
-
-function sortByFRank() {
-	let j, minRank;
-	let process;
-
-	while (readyQueue.length != 0) {
-		minRank = Number.MAX_VALUE;
-		for (p in readyQueue) {
-			if (readyQueue[p].fRank < minRank) {
-				minRank = readyQueue[p].fRank;
-				process = readyQueue[p];
-				j = p;
-			}
-		}
-		arrangedReadyQueue.push(process);
-		readyQueue.splice(j, 1);
-	}
-}
-
 function getProcessById(id) {
 	for (p in processes) {
 		if (processes[p].id == id) {
 			return processes[p];
 		}
 	}
-}
-var avgWaitingTimeNew = 0,
-	avgTurnAroundTimeNew = 0,
-	avgResponseTimeNew = 0;
-var ganttProposed = [];
-var completionTimeNew = 0;
-
-async function newProposed(flag) {
-	readyQueueInit();
-	let turnAroundTime = [];
-	let waitingTime = [];
-	let completionTime = [];
-	let responseTime = [];
-	let time = 0;
-	if (flag) {
-		$("#vis").removeAttr("hidden");
-		$("#wq").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
-	outer: while (readyQueue.length != 0) {
-		calculateTimeQuanta();
-		calculateBurstTimePriority();
-		calculateF();
-		calculateFRank();
-		sortByFRank();
-		$("#vis_wq").empty();
-		$("#vis_rq").empty();
-		while (arrangedReadyQueue.length != 0) {
-			let vis_block = "";
-			for (let process in arrangedReadyQueue) {
-				vis_block += `<span class='fitem'>P${arrangedReadyQueue[process].id}</span>`;
-			}
-			let p = arrangedReadyQueue.shift();
-			prev_time = time;
-			if (p.burst_time === getProcessById(p.id).burst_time) {
-				//It means came for the first time
-				responseTime[p.id] = prev_time;
-			}
-			if (p.burst_time > timeQuanta) {
-				p.burst_time -= timeQuanta;
-				time += timeQuanta;
-				readyQueue.push(p);
-				let vis_block = "";
-				for (let process in readyQueue) {
-					vis_block += `<span class='fitem'>P${readyQueue[process].id}</span>`;
-				}
-				if (flag) {
-					$("#vis_wq").empty().html(vis_block);
-				}
-			} //completed
-			else {
-				time += p.burst_time;
-				completionTime[p.id] = time;
-				let process = getProcessById(p.id);
-				waitingTime[p.id] = completionTime[p.id] - process.burst_time;
-			}
-			if (flag) {
-				$("#vis_name").empty().append("Proposed");
-				$("#vis_rq").empty().html(vis_block);
-				$("#vis_cpu").empty().html(`<span class='fitem'>P${p.id}</span>`);
-				$("#vis_time").empty().append(time);
-				$(".btn").attr("disabled", true);
-				await new Promise((r) => setTimeout(r, 2000));
-				if (stop_flag) break outer;
-			}
-			ganttProposed.push({
-				processId: p.id,
-				startTime: prev_time,
-				endTime: time,
-			});
-		}
-	}
-	$(".btn").removeAttr("disabled");
-	stop_flag = false;
-	for (i in completionTime) {
-		turnAroundTime[i] = completionTime[i];
-	}
-	completionTimeNew = time;
-	avgWaitingTimeNew = calculateAvgTime(waitingTime);
-	avgTurnAroundTimeNew = calculateAvgTime(turnAroundTime);
-	avgResponseTimeNew = calculateAvgTime(responseTime);
 }
 
 function calculateAvgTime(waitingTime) {
@@ -207,22 +71,13 @@ var ganttFCFS = [];
 var completionTimeFCFS = 0;
 
 async function FCFS(flag) {
-	readyQueueInit();
+	readyQueueInit(); // initialising queue with process objects as elements
 	let p, min;
 	let turnAroundFCFS = [];
 	let waitingFCFS = [];
 	let processQueue = [];
 	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
+	// creating an outer label
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
 			if (readyQueue[process].arrival_time <= time) {
@@ -250,7 +105,7 @@ async function FCFS(flag) {
 			time++;
 			continue outer;
 		}
-		let vis_block = "";
+		let vis_block = ""; // for gantt chart block
 		min = Number.MAX_VALUE;
 		for (let process in processQueue) {
 			vis_block += `<span class='fitem'>P${processQueue[process].id}</span>`;
@@ -259,17 +114,7 @@ async function FCFS(flag) {
 				p = process;
 			}
 		}
-		if (flag) {
-			$("#vis_name").empty().append("FCFS");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
+
 		prev_time = time;
 		time += processQueue[p].burst_time;
 		turnAroundFCFS[processQueue[p].id] = time - processQueue[p].arrival_time;
@@ -311,16 +156,7 @@ async function SJFNonPre(flag) {
 	let waitingSJFNonPre = [];
 	let processQueue = [];
 	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
+
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
 			if (readyQueue[process].arrival_time <= time)
@@ -357,17 +193,7 @@ async function SJFNonPre(flag) {
 				p = process;
 			}
 		}
-		if (flag) {
-			$("#vis_name").empty().append("SJF (non pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
+
 		prev_time = time;
 		time += processQueue[p].burst_time;
 		if (ganttSJFNonPre.length > 0)
@@ -409,16 +235,7 @@ async function SJFPre(flag) {
 	let processQueue = [];
 	let completionTime = [];
 	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
+
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
 			if (readyQueue[process].arrival_time <= time)
@@ -454,17 +271,6 @@ async function SJFPre(flag) {
 				min = processQueue[process].burst_time;
 				p = process;
 			}
-		}
-		if (flag) {
-			$("#vis_name").empty().append("SJF (pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
 		}
 		prev_time = time;
 		time++;
@@ -533,16 +339,6 @@ async function priorityNonPre(flag) {
 	let turnAroundPriorityNonPre = [];
 	let waitingPriorityNonPre = [];
 	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
 			if (readyQueue[process].arrival_time <= time) {
@@ -579,17 +375,7 @@ async function priorityNonPre(flag) {
 				p = process;
 			}
 		}
-		if (flag) {
-			$("#vis_name").empty().append("Priority (non pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
+
 		prev_time = time;
 		time += processQueue[p].burst_time;
 		if (ganttPriorityNonPre.length > 0)
@@ -631,16 +417,7 @@ async function priorityPre(flag) {
 	let processQueue = [];
 	let completionTime = [];
 	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
+
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
 			if (readyQueue[process].arrival_time <= time)
@@ -677,17 +454,7 @@ async function priorityPre(flag) {
 				p = process;
 			}
 		}
-		if (flag) {
-			$("#vis_name").empty().append("Priority (pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
+
 		prev_time = time;
 		time++;
 		if (
@@ -761,16 +528,7 @@ async function roundRobin(flag1) {
 	let responseRR = [];
 	let waitingRR = [];
 	let runningQueue = [];
-	if (flag1) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
+
 	// getting the initial processes in to the process queue
 	while (true) {
 		if (readyQueue.length == 0) break;
@@ -830,20 +588,7 @@ async function roundRobin(flag1) {
 				}
 			}
 		}
-		let vis_block = "";
-		for (let process in processQueue)
-			vis_block += `<span class='fitem'>P${processQueue[process].id}</span>`;
-		if (flag1) {
-			$("#vis_name").empty().append("Round Robin");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${currentProcess.id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
+
 		if (ganttRoundRobin.length > 0)
 			ganttRoundRobin[ganttRoundRobin.length - 1].endTime = prev_time;
 		ganttRoundRobin.push({
@@ -915,304 +660,7 @@ async function roundRobin(flag1) {
 	avgResponseTimeRoundRobin = calculateAvgTime(responseRR);
 }
 
-var avgTurnaroundTimeLJFNonPre = 0,
-	avgWaitingTimeLJFNonPre = 0,
-	avgResponseTimeLJFNonPre = 0;
-
-var ganttLJFNonPre = [];
-var completionTimeLJF = 0;
-
-async function LJFNonPre(flag) {
-	readyQueueInit();
-	let max = Number.MIN_VALUE;
-	let p;
-	let turnAroundLJFNonPre = [];
-	let waitingLJFNonPre = [];
-	let processQueue = [];
-	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
-	outer: while (readyQueue.length != 0) {
-		for (let process in readyQueue) {
-			if (readyQueue[process].arrival_time <= time)
-				processQueue.push(readyQueue[process]);
-		}
-
-		if (processQueue.length == 0) {
-			if (
-				ganttLJFNonPre.length > 0 &&
-				ganttLJFNonPre[ganttLJFNonPre.length - 1].processId != null
-			) {
-				ganttLJFNonPre[ganttLJFNonPre.length - 1].endTime = time;
-				ganttLJFNonPre.push({
-					processId: null,
-					startTime: time,
-					endTime: time + 1,
-				});
-			} else if (ganttLJFNonPre.length == 0) {
-				ganttLJFNonPre.push({
-					processId: null,
-					startTime: time,
-					endTime: time + 1,
-				});
-			}
-			time++;
-			continue outer;
-		}
-		max = Number.MIN_VALUE;
-		let vis_block = "";
-		for (let process in processQueue) {
-			vis_block += `<span class='fitem'>P${processQueue[process].id}</span>`;
-			if (processQueue[process].burst_time > max) {
-				max = processQueue[process].burst_time;
-				p = process;
-			}
-		}
-		if (flag) {
-			$("#vis_name").empty().append("LJF (non pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
-		prev_time = time;
-		time += processQueue[p].burst_time;
-		if (ganttLJFNonPre.length > 0)
-			ganttLJFNonPre[ganttLJFNonPre.length - 1].endTime = prev_time;
-		ganttLJFNonPre.push({
-			processId: processQueue[p].id,
-			startTime: prev_time,
-			endTime: time,
-		});
-		turnAroundLJFNonPre[processQueue[p].id] =
-			time - processQueue[p].arrival_time;
-		waitingLJFNonPre[processQueue[p].id] =
-			turnAroundLJFNonPre[processQueue[p].id] - processQueue[p].burst_time;
-		for (pro in readyQueue) {
-			if (readyQueue[pro].id === processQueue[p].id) readyQueue.splice(pro, 1);
-		}
-		processQueue.splice(0, processQueue.length);
-	}
-	$(".btn").removeAttr("disabled");
-	stop_flag = false;
-	completionTimeLJF = time;
-	avgTurnaroundTimeLJFNonPre = calculateAvgTime(turnAroundLJFNonPre);
-	avgWaitingTimeLJFNonPre = calculateAvgTime(waitingLJFNonPre);
-	avgResponseTimeLJFNonPre = avgWaitingTimeLJFNonPre;
-}
-var avgWaitingTimeLJFPre = 0,
-	avgTurnaroundTimeLJFPre = 0,
-	avgResponseTimeLJFPre = 0;
-var ganttLJFPre = [];
-var completionTimeLJFPre = 0;
-
-async function LJFPre(flag) {
-	readyQueueInit();
-	let max = Number.MIN_VALUE;
-	let p;
-	let turnAroundLJFPre = [];
-	let waitingLJFPre = [];
-	let responseLJFPre = [];
-	let processQueue = [];
-	let completionTime = [];
-	let time = 0;
-	if (flag) {
-		$("#wq").attr("hidden", true);
-		$("#vis").removeAttr("hidden");
-		$("html, body").animate(
-			{
-				scrollTop: $("#vis").offset().top,
-			},
-			0
-		);
-	}
-	outer: while (readyQueue.length != 0) {
-		for (let process in readyQueue) {
-			if (readyQueue[process].arrival_time <= time)
-				processQueue.push(readyQueue[process]);
-		}
-
-		if (processQueue.length === 0) {
-			if (
-				ganttLJFPre.length > 0 &&
-				ganttLJFPre[ganttLJFPre.length - 1].processId != null
-			) {
-				ganttLJFPre[ganttLJFPre.length - 1].endTime = time;
-				ganttLJFPre.push({
-					processId: null,
-					startTime: time,
-					endTime: time + 1,
-				});
-			} else if (ganttLJFPre.length == 0) {
-				ganttLJFPre.push({
-					processId: null,
-					startTime: time,
-					endTime: time + 1,
-				});
-			}
-			time++;
-			continue;
-		}
-		max = Number.MIN_VALUE;
-		let vis_block = "";
-		for (let process in processQueue) {
-			vis_block += `<span class='fitem'>P${processQueue[process].id}</span>`;
-			if (processQueue[process].burst_time > max) {
-				max = processQueue[process].burst_time;
-				p = process;
-			}
-		}
-		if (flag) {
-			$("#vis_name").empty().append("LJF (pre)");
-			$("#vis_rq").empty().html(vis_block);
-			$("#vis_cpu")
-				.empty()
-				.html(`<span class='fitem'>P${processQueue[p].id}</span>`);
-			$("#vis_time").empty().append(time);
-			$(".btn").attr("disabled", true);
-			await new Promise((r) => setTimeout(r, 2000));
-			if (stop_flag) break outer;
-		}
-		prev_time = time;
-		time++;
-		if (
-			ganttLJFPre.length > 0 &&
-			ganttLJFPre[ganttLJFPre.length - 1].processId != processQueue[p].id
-		) {
-			ganttLJFPre[ganttLJFPre.length - 1].endTime = prev_time;
-			ganttLJFPre.push({
-				processId: processQueue[p].id,
-				startTime: prev_time,
-				endTime: time,
-			});
-		} else if (ganttLJFPre.length == 0) {
-			ganttLJFPre.push({
-				processId: processQueue[p].id,
-				startTime: prev_time,
-				endTime: time,
-			});
-		}
-		if (
-			processQueue[p].burst_time ===
-			getProcessById(processQueue[p].id).burst_time
-		) {
-			//It means came for the first time
-			responseLJFPre[processQueue[p].id] =
-				prev_time - processQueue[p].arrival_time;
-		}
-		processQueue[p].burst_time--;
-		if (processQueue[p].burst_time == 0) {
-			completionTime[processQueue[p].id] = time;
-			for (let process in readyQueue) {
-				if (readyQueue[process].id == processQueue[p].id) {
-					readyQueue.splice(process, 1);
-				}
-			}
-		}
-		processQueue.splice(p, processQueue.length);
-	}
-	$(".btn").removeAttr("disabled");
-	stop_flag = false;
-	for (p in processes) {
-		turnAroundLJFPre[processes[p].id] =
-			completionTime[processes[p].id] - processes[p].arrival_time;
-		waitingLJFPre[processes[p].id] =
-			turnAroundLJFPre[processes[p].id] - processes[p].burst_time;
-	}
-	if (ganttLJFPre.length > 0)
-		ganttLJFPre[ganttLJFPre.length - 1].endTime = time;
-	completionTimeLJFPre = time;
-	avgTurnaroundTimeLJFPre = calculateAvgTime(turnAroundLJFPre);
-	avgWaitingTimeLJFPre = calculateAvgTime(waitingLJFPre);
-	avgResponseTimeLJFPre = calculateAvgTime(responseLJFPre);
-}
-
-var resultTable;
-
-function createResultTable() {
-	let resultHeaders = [
-		"Scheduling Algorithm",
-		"Average Turnaround Time",
-		"Average Waiting Time",
-	];
-	let results = [
-		{
-			name: "FCFS",
-			avgTA: avgTurnaroundTimeFCFS.toFixed(2),
-			avgWT: avgWaitingTimeFCFS.toFixed(2),
-		},
-		{
-			name: "SJF",
-			avgTA: avgTurnaroundTimeSJFNonPre.toFixed(2),
-			avgWT: avgWaitingTimeSJFNonPre.toFixed(2),
-		},
-		{
-			name: "SJF(Preemptive)",
-			avgTA: avgTurnaroundTimeSJFPre.toFixed(2),
-			avgWT: avgWaitingTimeSJFPre.toFixed(2),
-		},
-		{
-			name: "LJF",
-			avgTA: avgTurnaroundTimeLJFNonPre.toFixed(2),
-			avgWT: avgWaitingTimeLJFNonPre.toFixed(2),
-		},
-		{
-			name: "LJF(Preemptive)",
-			avgTA: avgTurnaroundTimeLJFPre.toFixed(2),
-			avgWT: avgWaitingTimeLJFPre.toFixed(2),
-		},
-		{
-			name: "Priority",
-			avgTA: avgTurnaroundTimePriorityNonPre.toFixed(2),
-			avgWT: avgWaitingTimePriorityNonPre.toFixed(2),
-		},
-		{
-			name: "Priority(Preemptive)",
-			avgTA: avgTurnaroundTimePriorityPre.toFixed(2),
-			avgWT: avgWaitingTimePriorityPre.toFixed(2),
-		},
-		{
-			name: "RoundRobin",
-			avgTA: avgTurnaroundTimeRoundRobin.toFixed(2),
-			avgWT: avgWaitingTimeRoundRobin.toFixed(2),
-		},
-		{
-			name: "Proposed",
-			avgTA: avgTurnAroundTimeNew.toFixed(2),
-			avgWT: avgWaitingTimeNew.toFixed(2),
-		},
-	];
-	header = "";
-	for (head in resultHeaders) {
-		header += "<th>" + resultHeaders[head] + "</th>";
-	}
-	$("#result_table").append(`<thead><tr>${header}</tr></thead>`);
-	data = "";
-	for (r in results) {
-		let row = "";
-		for (obj in results[r]) {
-			row += "<td>" + results[r][obj] + "</td>";
-		}
-		data += "<tr>" + row + "</tr>";
-	}
-	$("#result_table").append(`<tbody>${data}</tbody>`);
-}
-
 function init() {
-	avgWaitingTimeNew = 0;
-	avgWaitingTimeLJFPre = 0;
 	avgWaitingTimeRoundRobin = 0;
 	avgWaitingTimePriorityPre = 0;
 	avgWaitingTimePriorityNonPre = 0;
@@ -1221,9 +669,6 @@ function init() {
 	avgWaitingTimeLJFNonPre = 0;
 	avgWaitingTimeFCFS = 0;
 
-	avgTurnAroundTimeNew = 0;
-	avgTurnaroundTimeLJFPre = 0;
-	avgTurnaroundTimeLJFNonPre = 0;
 	avgTurnaroundTimeRoundRobin = 0;
 	avgTurnaroundTimePriorityPre = 0;
 	avgTurnaroundTimePriorityNonPre = 0;
@@ -1231,25 +676,19 @@ function init() {
 	avgTurnaroundTimeSJFNonPre = 0;
 	avgTurnaroundTimeFCFS = 0;
 
-	avgResponseTimeNew = 0;
-	avgResponseTimeLJFPre = 0;
 	avgResponseTimeRoundRobin = 0;
 	avgResponseTimePriorityPre = 0;
 	avgResponseTimePriorityNonPre = 0;
 	avgResponseTimeSJFPre = 0;
 	avgResponseTimeSJFNonPre = 0;
-	avgResponseTimeLJFNonPre = 0;
 	avgResponseTimeFCFS = 0;
 
-	ganttProposed = [];
 	ganttFCFS = [];
 	ganttSJFNonPre = [];
 	ganttSJFPre = [];
 	ganttPriorityNonPre = [];
 	ganttPriorityPre = [];
 	ganttRoundRobin = [];
-	ganttLJFNonPre = [];
-	ganttLJFPre = [];
 	bestAlgo = [];
 
 	completionTimeFCFS = 0;
@@ -1257,27 +696,16 @@ function init() {
 	completionTimeSJFPre = 0;
 	completionTimePriority = 0;
 	completionTimePriorityPre = 0;
-	completionTimeLJF = 0;
-	completionTimeLJFPre = 0;
 	completionTimeRoundRobin = 0;
-	completionTimeNew = 0;
 
 	$("#gantt_FCFS").empty();
 	$("#gantt_SJFNonPre").empty();
 	$("#gantt_SJFPre").empty();
-	$("#gantt_LJFNonPre").empty();
-	$("#gantt_LJFPre").empty();
 	$("#gantt_PriorityNonPre").empty();
 	$("#gantt_PriorityPre").empty();
 	$("#gantt_RoundRobin").empty();
-	$("#gantt_Proposed").empty();
 
 	$("#final_result").empty();
-}
-
-function displayResultTable() {
-	$("#result_table").empty();
-	createResultTable();
 }
 
 function displayGanttChart() {
@@ -1314,28 +742,6 @@ function displayGanttChart() {
 				`<div class="gantt-box" style="background-color: #58D68D; width: ${diff}px"><span class="gantt-box-left">${ganttSJFPre[i].startTime}</span><span class="gantt-box-right">${ganttSJFPre[i].endTime}<span></div>`
 			);
 	}
-	for (i in ganttLJFNonPre) {
-		let diff = ganttLJFNonPre[i].endTime - ganttLJFNonPre[i].startTime + 80;
-		if (ganttLJFNonPre[i].processId != null)
-			$("#gantt_LJFNonPre").append(
-				`<div class="gantt-box" style="width:${diff}px"><span class="gantt-box-left">${ganttLJFNonPre[i].startTime}</span>P${ganttLJFNonPre[i].processId}<span class="gantt-box-right">${ganttLJFNonPre[i].endTime}<span></div>`
-			);
-		else
-			$("#gantt_LJFNonPre").append(
-				`<div class="gantt-box" style="background-color: #58D68D; width: ${diff}px"><span class="gantt-box-left">${ganttLJFNonPre[i].startTime}</span><span class="gantt-box-right">${ganttLJFNonPre[i].endTime}<span></div>`
-			);
-	}
-	for (i in ganttLJFPre) {
-		let diff = ganttLJFPre[i].endTime - ganttLJFPre[i].startTime + 80;
-		if (ganttLJFPre[i].processId != null)
-			$("#gantt_LJFPre").append(
-				`<div class="gantt-box" style="width:${diff}px"><span class="gantt-box-left">${ganttLJFPre[i].startTime}</span>P${ganttLJFPre[i].processId}<span class="gantt-box-right">${ganttLJFPre[i].endTime}<span></div>`
-			);
-		else
-			$("#gantt_LJFPre").append(
-				`<div class="gantt-box" style="background-color: #58D68D; width: ${diff}px"><span class="gantt-box-left">${ganttLJFPre[i].startTime}</span><span class="gantt-box-right">${ganttLJFPre[i].endTime}<span></div>`
-			);
-	}
 	for (i in ganttPriorityNonPre) {
 		let diff =
 			ganttPriorityNonPre[i].endTime - ganttPriorityNonPre[i].startTime + 80;
@@ -1368,19 +774,6 @@ function displayGanttChart() {
 		else
 			$("#gantt_RoundRobin").append(
 				`<div class="gantt-box" style="background-color: #58D68D; width: ${diff}px"><span class="gantt-box-left">${ganttRoundRobin[i].startTime}</span><span class="gantt-box-right">${ganttRoundRobin[i].endTime}<span></div>`
-			);
-	}
-	for (i in ganttProposed) {
-		let diff = ganttProposed[i].endTime - ganttProposed[i].startTime + 80;
-		if (ganttProposed[i].processId != null)
-			$("#gantt_Proposed").append(
-				`<div class="gantt-box" style="width:${diff}px"><span class="gantt-box-left">${ganttProposed[
-					i
-				].startTime.toFixed(1)}</span>P${
-					ganttProposed[i].processId
-				}<span class="gantt-box-right">${ganttProposed[i].endTime.toFixed(
-					1
-				)}<span></div>`
 			);
 	}
 }
@@ -1425,67 +818,50 @@ function findBest(checked) {
 		"FCFS",
 		"SJF",
 		"SJF(Preemptive)",
-		"LJF",
-		"LJF(Preemptive)",
+
 		"Priority",
 		"Priority(Preemptive)",
 		"Round Robin",
-		"Proposed Algorithm",
 	];
 	let wt = [
 		avgWaitingTimeFCFS,
 		avgWaitingTimeSJFNonPre,
 		avgWaitingTimeSJFPre,
-		avgWaitingTimeLJFNonPre,
-		avgWaitingTimeLJFPre,
 		avgWaitingTimePriorityNonPre,
 		avgWaitingTimePriorityPre,
 		avgWaitingTimeRoundRobin,
-		avgWaitingTimeNew,
 	];
 	let tat = [
 		avgTurnaroundTimeFCFS,
 		avgTurnaroundTimeSJFNonPre,
 		avgTurnaroundTimeSJFPre,
-		avgTurnaroundTimeLJFNonPre,
-		avgTurnaroundTimeLJFPre,
 		avgTurnaroundTimePriorityNonPre,
 		avgTurnaroundTimePriorityPre,
 		avgTurnaroundTimeRoundRobin,
-		avgTurnAroundTimeNew,
 	];
 	let rt = [
 		avgResponseTimeFCFS,
 		avgResponseTimeSJFNonPre,
 		avgResponseTimeSJFPre,
-		avgResponseTimeLJFNonPre,
-		avgResponseTimeLJFPre,
 		avgResponseTimePriorityNonPre,
 		avgResponseTimePriorityPre,
 		avgResponseTimeRoundRobin,
-		avgResponseTimeNew,
 	];
 	let ct = [
 		completionTimeFCFS,
 		completionTimeSJF,
 		completionTimeSJFPre,
-		completionTimeLJF,
-		completionTimeLJFPre,
 		completionTimePriority,
 		completionTimePriorityPre,
 		completionTimeRoundRobin,
-		completionTimeNew,
 	];
 	let cs = [
 		ganttFCFS.length - 1,
 		ganttSJFNonPre.length - 1,
 		ganttSJFPre.length - 1,
-		ganttLJFNonPre.length - 1,
-		ganttLJFPre.length - 1,
 		ganttPriorityNonPre.length - 1,
 		ganttPriorityPre.length - 1,
 		ganttRoundRobin.length - 1,
-		ganttProposed.length - 1,
 	];
 	let cpuUtil = [];
 	let throughput = [];
@@ -1503,8 +879,6 @@ function findBest(checked) {
 			throughput.push(processes.length / (ct[i] + cs[i]));
 		}
 	}
-	let throughputRank = [];
-	let cpuUtilRank = [];
 	let wtRank = [];
 	let tatRank = [];
 	let rtRank = [];
@@ -1524,7 +898,7 @@ function findBest(checked) {
 					cpuUtilRank[a] +
 					throughputRank[a] +
 					rtRank[a]) /
-				5;
+				3;
 			if (rank[a] < minRank) minRank = rank[a];
 		}
 	}
@@ -1532,9 +906,7 @@ function findBest(checked) {
 		if (checked[a] && rank[a] === minRank) {
 			bestAlgo.push({
 				algorithm: algorithms[a],
-				cpu_util: (cpuUtil[a] * 100).toFixed(2) + " %",
-				throughput:
-					(throughput[a] * 100).toFixed(2) + " % (Process per unit time)",
+
 				tat: tat[a].toFixed(2),
 				wt: wt[a].toFixed(2),
 				rt: rt[a].toFixed(2),

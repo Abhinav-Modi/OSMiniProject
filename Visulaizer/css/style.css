@@ -206,3 +206,32 @@ body {
 	font-weight: 700;
 	padding: 0rem 2rem;
 }
+.names {
+	background-color: #1e1e1e;
+	display: flex;
+	justify-content: center;
+	width: max-content;
+	align-items: center;
+	margin: auto;
+	color: #ffff;
+	padding: 1.5rem 1rem;
+	border-radius: 2rem;
+	-webkit-box-shadow: -8px 10px 5px 0px rgba(0, 0, 0, 0.75);
+	-moz-box-shadow: -8px 10px 5px 0px rgba(0, 0, 0, 0.75);
+	box-shadow: -8px 10px 5px 0px rgba(0, 0, 0, 0.75);
+}
+.name {
+	border-right: 2px solid rgb(196, 88, 38);
+	padding: 0rem 2rem;
+}
+.nob {
+	border-right: none;
+}
+.name h5 {
+	color: #ffffff;
+	opacity: 0.8;
+}
+.name h6 {
+	color: #ffffff;
+	opacity: 0.6;
+}

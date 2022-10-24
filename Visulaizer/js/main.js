@@ -7,13 +7,13 @@ var processes = [
 	},
 	{
 		id: 2,
-		burst_time: 3,
+		burst_time: 8,
 		arrival_time: 2,
 		priority: 1,
 	},
 	{
 		id: 3,
-		burst_time: 6,
+		burst_time: 1,
 		arrival_time: 5,
 		priority: 3,
 	},
@@ -243,7 +243,7 @@ function start() {
 	$("#gantt").removeAttr("hidden");
 	$("#result").removeAttr("hidden");
 	$('[data-toggle="tooltip"]').tooltip();
-	let checked = [false, false, false, false, false, false, false, false, false];
+	let checked = [false, false, false, false, false, false];
 	if ($("#fcfs_switch").prop("checked") === true) {
 		FCFS(false);
 		checked[0] = true;
@@ -256,47 +256,26 @@ function start() {
 		SJFPre(false);
 		checked[2] = true;
 	}
-	if ($("#ljf_switch").prop("checked") === true) {
-		LJFNonPre(false);
-		checked[3] = true;
-	}
-	if ($("#lrtf_switch").prop("checked") === true) {
-		LJFPre(false);
-		checked[4] = true;
-	}
 	if ($("#priority_switch").prop("checked") === true) {
 		priorityNonPre(false);
-		checked[5] = true;
+		checked[3] = true;
 	}
 	if ($("#priority_pre_switch").prop("checked") === true) {
 		priorityPre(false);
-		checked[6] = true;
+		checked[4] = true;
 	}
 	if ($("#roundrobin_switch").prop("checked") === true) {
 		roundRobin(false);
-		checked[7] = true;
+		checked[5] = true;
 	}
-	if ($("#proposed_switch").prop("checked") === true) {
-		newProposed(false);
-		checked[8] = true;
-	}
-
+	// forms the gantt chart
 	displayGanttChart();
-	displayResultTable();
+	// this will display the best algorithm out of all the selected algorithms
 	findBest(checked);
-
 	for (b in bestAlgo) {
 		let row = "";
 		row +=
 			"<span>" + "Algorithm" + " : " + bestAlgo[b].algorithm + "<br></span>";
-		row +=
-			"<span>" +
-			"CPU Utilization" +
-			" : " +
-			bestAlgo[b].cpu_util +
-			"<br></span>";
-		row +=
-			"<span>" + "Throughput" + " : " + bestAlgo[b].throughput + "<br></span>";
 		row +=
 			"<span>" + "TurnAround Time" + " : " + bestAlgo[b].tat + "<br></span>";
 		row += "<span>" + "Waiting Time" + " : " + bestAlgo[b].wt + "<br></span>";
@@ -323,6 +302,8 @@ $("#roundrobin_switch").on("change", () => {
 		$("#show_time_quanta").show();
 	}
 });
-$("#vis_stop").on("click", () => {
-	stop_flag = true;
-});
+
+// this is for creating a dynamic visualiser
+// $("#vis_stop").on("click", () => {
+// 	stop_flag = true;
+// });
