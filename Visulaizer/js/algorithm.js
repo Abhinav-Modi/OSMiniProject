@@ -1,5 +1,5 @@
 var readyQueue = [];
-var arrangedReadyQueue = [];
+
 var timeQuanta;
 var stop_flag = false;
 
@@ -77,6 +77,7 @@ async function FCFS(flag) {
 	let waitingFCFS = [];
 	let processQueue = [];
 	let time = 0;
+
 	// creating an outer label
 	outer: while (readyQueue.length != 0) {
 		for (let process in readyQueue) {
@@ -84,6 +85,9 @@ async function FCFS(flag) {
 				processQueue.push(readyQueue[process]);
 			}
 		}
+		//process queue is holding all the processes that have arrived
+		console.log(processQueue.length);
+		// for rendering empty time block
 		if (processQueue.length === 0) {
 			if (
 				ganttFCFS.length > 0 &&
@@ -103,8 +107,10 @@ async function FCFS(flag) {
 				});
 			}
 			time++;
+
 			continue outer;
 		}
+
 		let vis_block = ""; // for gantt chart block
 		min = Number.MAX_VALUE;
 		for (let process in processQueue) {
@@ -125,6 +131,7 @@ async function FCFS(flag) {
 			if (readyQueue[pro].id === processQueue[p].id) readyQueue.splice(pro, 1);
 		}
 
+		//adding the new gantt chart block
 		if (ganttFCFS.length > 0) {
 			ganttFCFS[ganttFCFS.length - 1].endTime = prev_time;
 		}
@@ -133,7 +140,7 @@ async function FCFS(flag) {
 			startTime: prev_time,
 			endTime: time,
 		});
-		processQueue.splice(0, processQueue.length);
+		processQueue.splice(0, processQueue.length); //removing item from process queue after completion
 	}
 	$(".btn").removeAttr("disabled");
 	stop_flag = false;
@@ -274,6 +281,7 @@ async function SJFPre(flag) {
 		}
 		prev_time = time;
 		time++;
+
 		if (
 			ganttSJFPre.length > 0 &&
 			ganttSJFPre[ganttSJFPre.length - 1].processId != processQueue[p].id
@@ -291,13 +299,14 @@ async function SJFPre(flag) {
 				endTime: time,
 			});
 		}
+		//comparing shortest burst times
 		if (
 			processQueue[p].burst_time ===
 			getProcessById(processQueue[p].id).burst_time
 		) {
 			//It means came for the first time
-			responseSJFPre[processQueue[p].id] =
-				prev_time - processQueue[p].arrival_time;
+
+			responseSJFPre[processQueue[p].id] = time - processQueue[p].arrival_time;
 		}
 		processQueue[p].burst_time--;
 		if (processQueue[p].burst_time == 0) {
@@ -809,10 +818,8 @@ function calculateRank(a, b) {
 }
 
 function findBest(checked) {
-	//calculate max CPU utilization
 	//calculate min wt
 	// calculate min tat
-	// calculate max through put
 	// cs is context switching
 	let algorithms = [
 		"FCFS",
@@ -863,6 +870,7 @@ function findBest(checked) {
 		ganttPriorityPre.length - 1,
 		ganttRoundRobin.length - 1,
 	];
+	debugger;
 	let cpuUtil = [];
 	let throughput = [];
 	let minArrivalTime = Number.MAX_VALUE;
