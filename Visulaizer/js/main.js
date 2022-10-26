@@ -44,7 +44,7 @@ function displayTable() {
 	$("#table").empty();
 	createTable();
 }
-
+//seriralising the processes
 function orderProcess() {
 	let i = 0;
 	processes.forEach(function (p) {
@@ -52,12 +52,12 @@ function orderProcess() {
 		i++;
 	});
 }
-
+//default process values
 function openAddModal() {
 	$("#modal_process_id").val(processes.length + 1);
-	$("#modal_burst_time").val(Math.floor(Math.random() * 100));
-	$("#modal_arrival_time").val(Math.floor(Math.random() * 100));
-	$("#modal_priority").val(Math.floor(Math.random() * 100));
+	$("#modal_burst_time").val(Math.floor(Math.random() * 10));
+	$("#modal_arrival_time").val(Math.floor(Math.random() * 10));
+	$("#modal_priority").val(Math.floor(Math.random() * 10));
 }
 
 function addProcess() {
