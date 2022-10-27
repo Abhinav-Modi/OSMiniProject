@@ -20,7 +20,7 @@ var processes = [
 ];
 
 let headers = ["Process Id", "Burst Time", "Arrival Time", "Priority"];
-
+//creates table for processes
 function createTable() {
 	let table = $("#table");
 	let head = "";
