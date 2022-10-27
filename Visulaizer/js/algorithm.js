@@ -891,8 +891,7 @@ function findBest(checked) {
 	let tatRank = [];
 	let rtRank = [];
 	let rank = [];
-	throughputRank = calculateRank(throughput, 0);
-	cpuUtilRank = calculateRank(cpuUtil, 0);
+
 	wtRank = calculateRank(wt, 1);
 	tatRank = calculateRank(tat, 1);
 	rtRank = calculateRank(rt, 1);
@@ -900,13 +899,7 @@ function findBest(checked) {
 	let minRank = Number.MAX_VALUE;
 	for (a in algorithms) {
 		if (checked[a]) {
-			rank[a] =
-				(wtRank[a] +
-					tatRank[a] +
-					cpuUtilRank[a] +
-					throughputRank[a] +
-					rtRank[a]) /
-				3;
+			rank[a] = (wtRank[a] + tatRank[a] + rtRank[a]) / 3;
 			if (rank[a] < minRank) minRank = rank[a];
 		}
 	}
